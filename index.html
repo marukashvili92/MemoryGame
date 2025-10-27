@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Animal Memory Game</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Animal Memory Game</h1>
+
+  <div id="voice-feedback" aria-live="polite" style="position:absolute;left:-9999px;"></div>
+
+  <div id="menu">
+    <div id="reset-controls">
+      <button id="reset-round-btn" onclick="resetRound()">🔄 Reset Round (-10 pts)</button>
+      <button id="reset-game-btn" onclick="resetFullGame()">🧨 Restart Game (Start from 0)</button>
+    </div>
+    <div id="level-buttons"></div>
+  </div>
+
+  <div id="score">Score: 0</div>
+  <div id="level-display">Level: 1</div>
+
+  <div id="game-wrapper">
+    <div class="grid" id="game-board"></div>
+  </div>
+
+  <button onclick="resetGame()">Back to Menu</button>
+
+  <div id="popup" style="display:none;">
+  <div class="popup-content">
+    <h2>Level Complete!</h2>
+    <button onclick="goToNextLevel()">Next Level</button>
+    <button onclick="resetRound()">🔄 Restart Round (-10 pts)</button>
+    <button onclick="resetGame()">Main Menu</button>
+  </div>
+</div>
+
+  <script src="levels.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

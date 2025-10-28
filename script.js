@@ -98,7 +98,7 @@ function handleClick(e) {
 
   if (lockBoard || card.classList.contains("matched") || card === firstCard) return;
 
-  card.style.backgroundImage = `url(images/animals/${card.dataset.animal}.jpg)`;
+  card.style.backgroundImage = `url(images/animals/${card.dataset.animal}.png)`;
   card.classList.add("flipped");
   speak(`A ${card.dataset.animal}`);
   clickCount++;

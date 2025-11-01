@@ -9,34 +9,53 @@
 <body>
   <h1>Animal Memory Game</h1>
 
+  <!-- Voice feedback for screen readers -->
   <div id="voice-feedback" aria-live="polite" style="position:absolute;left:-9999px;"></div>
 
+  <!-- Main Menu -->
   <div id="menu">
     <div id="reset-controls">
       <button id="reset-round-btn" onclick="resetRound()">🔄 Reset Round (-10 pts)</button>
       <button id="reset-game-btn" onclick="resetFullGame()">🧨 Restart Game (Start from 0)</button>
+      <button onclick="showLeaderboard()">🏆 View Leaderboard</button>
     </div>
     <div id="level-buttons"></div>
   </div>
 
+  <!-- Score and Level Display -->
   <div id="score">Score: 0</div>
   <div id="level-display">Level: 1</div>
 
+  <!-- Game Board -->
   <div id="game-wrapper">
     <div class="grid" id="game-board"></div>
   </div>
 
+  <!-- Back Button -->
   <button onclick="resetGame()">Back to Menu</button>
 
+  <!-- Level Completion Popup -->
   <div id="popup" style="display:none;">
-  <div class="popup-content">
-    <h2>Level Complete!</h2>
-    <button onclick="goToNextLevel()">Next Level</button>
-    <button onclick="resetRound()">🔄 Restart Round (-10 pts)</button>
-    <button onclick="resetGame()">Main Menu</button>
+    <div class="popup-content">
+      <h2>Level Complete!</h2>
+      <button onclick="goToNextLevel()">Next Level</button>
+      <button onclick="resetRound()">🔄 Restart Round (-10 pts)</button>
+      <button onclick="resetGame()">Main Menu</button>
+    </div>
   </div>
-</div>
 
+  <!-- ✅ Leaderboard Section -->
+  <div id="leaderboard" style="display:none;">
+    <div class="popup-content">
+      <h2>Leaderboard</h2>
+      <ul id="leaderboard-list">
+        <!-- Scores will be injected here -->
+      </ul>
+      <button onclick="returnToMenu()">Main Menu</button> <!-- ✅ Updated to use returnToMenu -->
+    </div>
+  </div>
+
+  <!-- Scripts -->
   <script src="levels.js"></script>
   <script src="script.js"></script>
 </body>

@@ -1,3 +1,4 @@
+/* ✅ Mobile layout adjustments */
 @media (max-width: 600px) {
   #game-board {
     grid-template-columns: repeat(2, 100px);
@@ -7,29 +8,64 @@
     font-size: 16px;
     padding: 10px 20px;
   }
+
+  .grid {
+    grid-template-columns: repeat(2, 100px);
+    grid-gap: 8px;
+  }
+
+  h1 {
+    font-size: 24px;
+    margin-top: 10px;
+  }
+
+  #score, #level-display {
+    font-size: 16px;
+  }
+
+  #leaderboard .popup-content {
+    width: 90%;
+    max-width: 320px;
+  }
 }
 
-body {
+/* ✅ Fullscreen layout */
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
   font-family: sans-serif;
   text-align: center;
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  margin: 0;
-  padding: 0;
-  height: 100%;
 }
 
+/* ✅ Game board wrapper */
+#game-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: calc(100vh - 100px);
+  width: 100vw;
+}
+
+/* ✅ Grid layout */
 .grid {
   display: grid;
   grid-template-columns: repeat(5, 100px);
   grid-gap: 10px;
   justify-content: center;
-  margin: 20px auto;
+  align-content: center;
+  margin: 0 auto;
   perspective: 1000px;
 }
 
+/* ✅ Card styles */
 .card {
+  position: relative;
   width: 100px;
   height: 100px;
   background-image: url("images/card_back.png");
@@ -47,6 +83,29 @@ body {
   transform: rotateY(360deg);
 }
 
+/* ✅ Zoom and Unite Animation */
+@keyframes zoomCenter {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(2.5) translate(-50%, -50%);
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    z-index: 999;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+.matched-zoom {
+  animation: zoomCenter 2s ease forwards;
+}
+
+/* ✅ Menu layout */
 #menu {
   display: flex;
   flex-direction: column;
@@ -67,6 +126,7 @@ body {
   font-size: 18px;
 }
 
+/* ✅ Reset controls */
 #reset-controls {
   margin-top: 20px;
   text-align: center;
@@ -88,20 +148,29 @@ body {
   background-color: #cc3333;
 }
 
+/* ✅ Score and level display */
 #level-display {
   font-size: 20px;
   margin: 10px;
   color: #333;
 }
 
-#popup {
+#score {
+  font-size: 20px;
+  margin: 10px;
+  color: #333;
+}
+
+/* ✅ Popup styling */
+#popup,
+#leaderboard {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background-color: rgba(0,0,0,0.6);
-  display: flex;
+  display: none;
   justify-content: center;
   align-items: center;
   z-index: 1000;
@@ -113,8 +182,23 @@ body {
   border-radius: 12px;
   text-align: center;
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  max-width: 400px;
+  width: 90%;
 }
 
+#leaderboard-list {
+  list-style: none;
+  padding: 0;
+  margin: 10px 0;
+  text-align: left;
+}
+
+#leaderboard-list li {
+  margin: 4px 0;
+  font-size: 16px;
+}
+
+/* ✅ Voice feedback (hidden) */
 #voice-feedback {
   position: absolute;
   left: -9999px;

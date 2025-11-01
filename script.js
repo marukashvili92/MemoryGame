@@ -7,6 +7,7 @@ let isFreshStart = false;
 let completedLevels = JSON.parse(localStorage.getItem("completedLevels")) || {};
 let replayCounts = JSON.parse(localStorage.getItem("replayCounts")) || {};
 let score = parseInt(localStorage.getItem("score")) || 0;
+let personalBest = parseInt(localStorage.getItem("personalBest")) || 0;
 let clickCount = 0;
 let startTime = 0;
 let unlockedLevel = parseInt(localStorage.getItem("unlockedLevel")) || 1;
@@ -16,25 +17,18 @@ let roundResets = 0;
 function speak(text) {
   speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
   speechSynthesis.speak(utterance);
 }
 
 function startLevel(level) {
   currentLevel = level;
   document.getElementById("level-display").textContent = `Level: ${level}`;
-
-  // Prevent replay penalty if game was freshly reset
-  if (!isFreshStart && completedLevels[level] !== undefined) {
-    replayCounts[level] = (replayCounts[level] || 0) + 1;
-    score = completedLevels[level] - (10 * replayCounts[level]);
-    speak(`Replaying Level ${level}. Starting score is now ${score} after ${replayCounts[level]} penalties.`);
-    localStorage.setItem("replayCounts", JSON.stringify(replayCounts));
-  }
-
-  isFreshStart = false; // reset flag after first level starts
+  isFreshStart = false;
 
   document.body.style.backgroundImage = `url(images/backgrounds/level${level}.jpg)`;
   document.getElementById("menu").style.display = "none";
+  document.getElementById("leaderboard").style.display = "none";
   document.getElementById("game-board").innerHTML = "";
   clickCount = 0;
   startTime = Date.now();
@@ -46,7 +40,8 @@ function startLevel(level) {
   const pairs = [...animals, ...animals].slice(0, totalCards);
   const shuffled = pairs.sort(() => 0.5 - Math.random());
 
-  document.getElementById("game-board").style.gridTemplateColumns = `repeat(${Math.ceil(totalCards / 4)}, 100px)`;
+  const columns = Math.min(Math.ceil(totalCards / 2), 6);
+  document.getElementById("game-board").style.gridTemplateColumns = `repeat(${columns}, 100px)`;
 
   shuffled.forEach((animal, index) => {
     const card = document.createElement("div");
@@ -81,7 +76,7 @@ function resetFullGame() {
     localStorage.clear();
     clearInterval(timerInterval);
     document.getElementById("score").textContent = `Score: ${score}`;
-    isFreshStart = true; // prevent penalty on next level
+    isFreshStart = true;
     resetGame();
   }
 }
@@ -100,7 +95,9 @@ function handleClick(e) {
 
   card.style.backgroundImage = `url(images/animals/${card.dataset.animal}.png)`;
   card.classList.add("flipped");
-  speak(`A ${card.dataset.animal}`);
+
+  const article = /^[aeiou]/i.test(card.dataset.animal) ? "an" : "a";
+  speak(`${article} ${card.dataset.animal}`);
   clickCount++;
 
   if (!firstCard) {
@@ -110,14 +107,21 @@ function handleClick(e) {
     lockBoard = true;
 
     if (firstCard.dataset.animal === secondCard.dataset.animal) {
+      firstCard.classList.add("matched-zoom");
+      secondCard.classList.add("matched-zoom");
+
       setTimeout(() => {
+        firstCard.classList.remove("matched-zoom");
+        secondCard.classList.remove("matched-zoom");
+
         firstCard.classList.add("matched");
         secondCard.classList.add("matched");
+
         speak("Great job!");
         updateScore(true);
         checkLevelComplete();
         resetTurn();
-      }, 1000);
+      }, 2000);
     } else {
       setTimeout(() => {
         firstCard.style.backgroundImage = `url(images/card_back.png)`;
@@ -126,7 +130,7 @@ function handleClick(e) {
         secondCard.classList.remove("flipped");
         updateScore(false);
         resetTurn();
-      }, 1500);
+      }, 3000);
     }
   }
 }
@@ -160,6 +164,11 @@ function checkLevelComplete() {
     clearInterval(timerInterval);
     timerStarted = false;
 
+    if (score > personalBest) {
+      personalBest = score;
+      localStorage.setItem("personalBest", personalBest);
+    }
+
     speak("You completed the level!");
     unlockNextLevel();
     saveProgress();
@@ -181,7 +190,8 @@ function unlockNextLevel() {
 function resetGame() {
   document.getElementById("menu").style.display = "block";
   document.getElementById("game-board").innerHTML = "";
-  document.getElementById("popup").style.display = "none"; // ✅ Hide popup
+  document.getElementById("popup").style.display = "none";
+  document.getElementById("leaderboard").style.display = "none";
 }
 
 function buildLevelButtons() {
@@ -192,7 +202,18 @@ function buildLevelButtons() {
     btn.textContent = `Level ${i}`;
     btn.setAttribute("data-level", i);
     btn.disabled = i > unlocked;
-    btn.onclick = () => startLevel(i);
+
+    btn.onclick = () => {
+      const wasCompleted = completedLevels[i] !== undefined && completedLevels[i] > 0;
+      if (wasCompleted && !isFreshStart) {
+        replayCounts[i] = (replayCounts[i] || 0) + 1;
+        score = completedLevels[i] - (10 * replayCounts[i]);
+        speak(`Replaying Level ${i}. Starting score is now ${score} after ${replayCounts[i]} penalties.`);
+        localStorage.setItem("replayCounts", JSON.stringify(replayCounts));
+      }
+      startLevel(i);
+    };
+
     container.appendChild(btn);
   }
 }
@@ -206,6 +227,81 @@ function goToNextLevel() {
   } else {
     alert(`You've completed all levels! Your final score is: ${score}`);
     resetGame();
+  }
+}
+
+function showLeaderboard() {
+  const leaderboard = document.getElementById("leaderboard");
+  const list = document.getElementById("leaderboard-list");
+  list.innerHTML = "";
+
+  list.innerHTML += `<li><strong>Your Current Score:</strong> ${score} pts</li>`;
+
+  const personalScores = Object.values(completedLevels)
+    .filter(s => s > 0)
+    .sort((a, b) => b - a)
+    .slice(0, 3);
+
+  list.innerHTML += `<li><br><strong>Your Top Scores:</strong></li>`;
+  if (personalScores.length === 0) {
+    list.innerHTML += `<li>No completed levels yet.</li>`;
+  } else {
+    personalScores.forEach((score, i) => {
+      list.innerHTML += `<li>#${i + 1}: ${score} pts</li>`;
+    });
+  }
+
+  let globalScores = JSON.parse(localStorage.getItem("globalScores")) || [];
+  if (!globalScores.includes(score)) {
+    globalScores.push(score);
+    globalScores = [...new Set(globalScores)].sort((a, b) => b - a).slice(0, 10);
+    localStorage.setItem("globalScores", JSON.stringify(globalScores));
+  }
+
+  list.innerHTML += `<li><br><strong>Global Top 10:</strong></li>`;
+  globalScores.forEach((s, i) => {
+    list.innerHTML += `<li>#${i + 1}: ${s} pts</li>`;
+  });
+
+  const rank = globalScores.indexOf(score) + 1;
+  list.innerHTML += `<li><br><strong>Your Rank:</strong> ${rank > 0 ? "#" + rank : "Unranked"}</li>`;
+
+  document.getElementById("menu").style.display = "none";
+  leaderboard.style.display = "flex";
+}
+
+function returnToMenu() {
+  document.getElementById("leaderboard").style.display = "none";
+  document.getElementById("menu").style.display = "block";
+
+  const container = document.getElementById("level-buttons");
+  if (container.children.length === 0) {
+    buildLevelButtons();
+  }
+}
+
+function buildLevelButtons() {
+  const container = document.getElementById("level-buttons");
+  container.innerHTML = "";
+  const unlocked = parseInt(localStorage.getItem("unlockedLevel")) || 1;
+  for (let i = 1; i <= 10; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = `Level ${i}`;
+    btn.setAttribute("data-level", i);
+    btn.disabled = i > unlocked;
+
+    btn.onclick = () => {
+      const wasCompleted = completedLevels[i] !== undefined && completedLevels[i] > 0;
+      if (wasCompleted && !isFreshStart) {
+        replayCounts[i] = (replayCounts[i] || 0) + 1;
+        score = completedLevels[i] - (10 * replayCounts[i]);
+        speak(`Replaying Level ${i}. Starting score is now ${score} after ${replayCounts[i]} penalties.`);
+        localStorage.setItem("replayCounts", JSON.stringify(replayCounts));
+      }
+      startLevel(i);
+    };
+
+    container.appendChild(btn);
   }
 }
 
